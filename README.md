@@ -1,4 +1,4 @@
-# GY-Terminal (`gui2terminal`)
+# g2t (`gui2terminal`)
 
 > **Read-only. Local-only. Just a fun project — keep expectations low!**
 
@@ -8,7 +8,7 @@ A lightweight, read-only Linux monitor that watches what happens on your system,
 
 ## What It Is
 
-**GY-Terminal** is a small educational/curiosity monitor for Linux. Whenever programs start or system events occur, it tries to show the corresponding command-line equivalent alongside quick context and a wiki link — purely as a non-interactive, read-only observer.
+**g2t** is a small educational/curiosity monitor for Linux. Whenever programs start or system events occur, it tries to show the corresponding command-line equivalent alongside quick context and a wiki link — purely as a non-interactive, read-only observer.
 
 It is **not** a magic GUI-to-CLI recorder for every single mouse click or canvas action inside complex apps. Think of it as a friendly side-eye at what commands get invoked on your machine.
 
