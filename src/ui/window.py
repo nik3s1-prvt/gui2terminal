@@ -1,14 +1,14 @@
-## gui2terminal (g2t) - A clean dark UI for terminal commands
 import tkinter as tk
 from tkinter import ttk
 import webbrowser
 
-### Main UI Class
+
 class MonitorWindow:
     """Clean dark UI window for gui2terminal (g2t)."""
 
     def __init__(self, donate_url: str = "https://example.com/donate") -> None:
         self.donate_url = donate_url
+        self._row_urls: dict[str, str] = {}
 
         self.root = tk.Tk()
         self.root.title("gui2terminal (g2t)")
@@ -30,9 +30,7 @@ class MonitorWindow:
         self._build_header()
         self._build_columns()
         self._build_footer()
-        self._insert_placeholder_rows()
 
-#### Configure Styles
     def _configure_styles(self) -> None:
         style = ttk.Style(self.root)
         style.theme_use("clam")
@@ -44,13 +42,13 @@ class MonitorWindow:
             "Title.TLabel",
             background=self.bg_app,
             foreground=self.fg_primary,
-            font=("Segoe UI", 12, "bold"),
+            font=("TkDefaultFont", 12, "bold"),
         )
         style.configure(
             "Footer.TLabel",
             background=self.bg_app,
             foreground=self.fg_muted,
-            font=("Segoe UI", 9),
+            font=("TkDefaultFont", 9),
         )
         style.configure(
             "Donate.TButton",
@@ -60,7 +58,7 @@ class MonitorWindow:
             lightcolor="#2b313d",
             darkcolor="#1a1e26",
             padding=(12, 5),
-            font=("Segoe UI", 9, "bold"),
+            font=("TkDefaultFont", 9, "bold"),
         )
         style.map(
             "Donate.TButton",
@@ -77,7 +75,7 @@ class MonitorWindow:
             lightcolor=self.border,
             darkcolor=self.border,
             rowheight=32,
-            font=("Consolas", 10),
+            font=("TkFixedFont", 10),
         )
         style.configure(
             "G2T.Treeview.Heading",
@@ -86,7 +84,7 @@ class MonitorWindow:
             bordercolor=self.border,
             relief="flat",
             padding=(8, 6),
-            font=("Segoe UI", 9, "bold"),
+            font=("TkDefaultFont", 9, "bold"),
         )
         style.map(
             "G2T.Treeview.Heading",
@@ -106,7 +104,6 @@ class MonitorWindow:
             arrowcolor=self.fg_muted,
         )
 
-### Build UI Elements
     def _build_header(self) -> None:
         header = ttk.Frame(self.root, style="App.TFrame", padding=(14, 10))
         header.pack(fill=tk.X)
@@ -138,7 +135,6 @@ class MonitorWindow:
             style="G2T.Treeview",
         )
 
-        # Linke schmale Spalte, mittlere breite Befehls-Spalte, rechte Spalte für Wiki/Man
         self.tree.heading("tag", text="Type", anchor=tk.W)
         self.tree.heading("command", text="Command", anchor=tk.W)
         self.tree.heading("info", text="Wiki / Man", anchor=tk.W)
@@ -176,21 +172,13 @@ class MonitorWindow:
         )
         label.pack(side=tk.LEFT)
 
-### Example of a right-aligned label in the footer (currently commented out)
-
-    def _insert_placeholder_rows(self) -> None:
-        sample_rows = [
-            ("FS", ">> mkdir test", "man mkdir  |  ubuntuusers.de/Shell"),
-            ("FS", ">> cd test", "man cd  |  wiki.archlinux.org/title/Bash"),
-            ("NET", ">> nmcli dev status", "man nmcli  |  wiki.archlinux.org/title/NetworkManager"),
-            ("SYNC", ">> rsync -av src/ dst/", "man rsync  |  wiki.ubuntuusers.de/rsync/"),
-        ]
-        for idx, row in enumerate(sample_rows):
-            row_tag = "even" if idx % 2 == 0 else "odd"
-            self.tree.insert("", tk.END, values=row, tags=(row_tag,))
-
-
-### Example of inserting a row with a clickable URL (currently commented out)
+    def add_row(self, tag: str, command: str, info: str, wiki_url: str = "") -> None:
+        row_idx = len(self.tree.get_children())
+        row_tag = "even" if row_idx % 2 == 0 else "odd"
+        item_id = self.tree.insert("", tk.END, values=(tag, command, info), tags=(row_tag,))
+        if wiki_url:
+            self._row_urls[item_id] = wiki_url
+        self.tree.see(item_id)
 
     def _open_donate(self) -> None:
         if self.donate_url:
@@ -200,16 +188,20 @@ class MonitorWindow:
         selected = self.tree.selection()
         if not selected:
             return
-        values = self.tree.item(selected[0], "values")
-        if len(values) >= 3 and "http" in values[2]:
-            for part in values[2].split():
-                if part.startswith(("http://", "https://")):
-                    webbrowser.open(part)
-                    break
+        item_id = selected[0]
+        url = self._row_urls.get(item_id, "")
+        if not url:
+            values = self.tree.item(item_id, "values")
+            if len(values) >= 3:
+                for part in values[2].split():
+                    if part.startswith(("http://", "https://")):
+                        url = part
+                        break
+                    if "." in part and "/" in part:
+                        url = f"https://{part}"
+                        break
+        if url:
+            webbrowser.open(url)
 
     def run(self) -> None:
         self.root.mainloop()
-
-### Main entry point
-if __name__ == "__main__":
-    MonitorWindow().run()

@@ -1,41 +1,46 @@
 from pathlib import Path
-from typing import Callable
+import psutil
 
 from src.core.wiki_helper import resolve_command_info
 
 
-class CommandLogWatcher:
-    """Liest neue Befehle (z. B. mkdir, cd) aus einer Test-Logdatei."""
+class ProcessWatcher:
+    """Beobachtet neu gestartete Prozesse und gleicht sie mit bekannten PATH-Binaries ab."""
 
-    def __init__(self, log_path: Path, target_cmds: set[str] | None = None) -> None:
-        self.log_path = log_path
-        self.target_cmds = target_cmds or {"mkdir", "cd"}
-        self._seen_count = 0
+    def __init__(self, known_binaries: set[str]) -> None:
+        self.known_binaries = known_binaries
+        self._seen_pids: set[int] = set()
+        self._initialized = False
 
-    def poll_new_rows(self) -> list[tuple[str, str, str, str]]:
-        """Gibt neue Einträge als (tag, display_cmd, info_text, wiki_url) zurück."""
-        if not self.log_path.exists():
-            return []
+    def poll_new_processes(self) -> list[tuple[str, str, str, str]]:
+        """Gibt neu gestartete Prozesse als (tag, display_cmd, info_text, wiki_url) zurück."""
+        current_pids: set[int] = set()
+        new_rows: list[tuple[str, str, str, str]] = []
 
-        lines = self.log_path.read_text(encoding="utf-8", errors="ignore").splitlines()
-        if len(lines) <= self._seen_count:
-            return []
+        for proc in psutil.process_iter(attrs=["pid", "name", "cmdline"]):
+            pid = proc.info.get("pid")
+            if pid is None:
+                continue
+            current_pids.add(pid)
 
-        new_lines = lines[self._seen_count :]
-        self._seen_count = len(lines)
-
-        rows: list[tuple[str, str, str, str]] = []
-        for raw in new_lines:
-            cmd_line = raw.strip()
-            if not cmd_line or cmd_line.startswith("#"):
+            if pid in self._seen_pids:
                 continue
 
-            cmd_name = cmd_line.split()[0]
-            if cmd_name not in self.target_cmds:
+            if not self._initialized:
                 continue
 
-            tag, man_cmd, wiki_url = resolve_command_info(cmd_name)
+            name = (proc.info.get("name") or "").strip()
+            cmdline = proc.info.get("cmdline") or []
+            base_cmd = Path(cmdline[0]).name if cmdline else name
+
+            if base_cmd not in self.known_binaries:
+                continue
+
+            cmd_display = " ".join(cmdline) if cmdline else base_cmd
+            tag, man_cmd, wiki_url = resolve_command_info(base_cmd)
             info_text = f"{man_cmd}  |  {wiki_url.replace('https://', '')}"
-            rows.append((tag, f">> {cmd_line}", info_text, wiki_url))
+            new_rows.append((tag, f">> {cmd_display}", info_text, wiki_url))
 
-        return rows
+        self._seen_pids = current_pids
+        self._initialized = True
+        return new_rows
