@@ -4,6 +4,9 @@
 
 A lightweight, read-only Linux monitor that watches what happens on your system, matches launched binaries against installed `PATH` commands, shows brief local help text, and links to relevant distribution wiki pages.
 
+## Update
+The Programm can read now a few things but only if u open something
+
 ---
 
 ## System
