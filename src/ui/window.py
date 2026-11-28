@@ -1,8 +1,9 @@
+## gui2terminal (g2t) - A clean dark UI for terminal commands
 import tkinter as tk
 from tkinter import ttk
 import webbrowser
 
-
+### Main UI Class
 class MonitorWindow:
     """Clean dark UI window for gui2terminal (g2t)."""
 
@@ -31,6 +32,7 @@ class MonitorWindow:
         self._build_footer()
         self._insert_placeholder_rows()
 
+#### Configure Styles
     def _configure_styles(self) -> None:
         style = ttk.Style(self.root)
         style.theme_use("clam")
@@ -104,6 +106,7 @@ class MonitorWindow:
             arrowcolor=self.fg_muted,
         )
 
+### Build UI Elements
     def _build_header(self) -> None:
         header = ttk.Frame(self.root, style="App.TFrame", padding=(14, 10))
         header.pack(fill=tk.X)
@@ -173,6 +176,8 @@ class MonitorWindow:
         )
         label.pack(side=tk.LEFT)
 
+### Example of a right-aligned label in the footer (currently commented out)
+
     def _insert_placeholder_rows(self) -> None:
         sample_rows = [
             ("FS", ">> mkdir test", "man mkdir  |  ubuntuusers.de/Shell"),
@@ -183,6 +188,9 @@ class MonitorWindow:
         for idx, row in enumerate(sample_rows):
             row_tag = "even" if idx % 2 == 0 else "odd"
             self.tree.insert("", tk.END, values=row, tags=(row_tag,))
+
+
+### Example of inserting a row with a clickable URL (currently commented out)
 
     def _open_donate(self) -> None:
         if self.donate_url:
@@ -202,6 +210,6 @@ class MonitorWindow:
     def run(self) -> None:
         self.root.mainloop()
 
-
+### Main entry point
 if __name__ == "__main__":
     MonitorWindow().run()
