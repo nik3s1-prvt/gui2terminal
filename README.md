@@ -6,6 +6,12 @@ A lightweight, read-only Linux monitor that watches what happens on your system,
 
 ---
 
+## System
+First it will be able to use on Linux based systems, cause who tf use Windows
+Anyways in the Future its sure possible it will be able to use on Windows
+
+
+
 ## What It Is
 
 **g2t** is a small educational/curiosity monitor for Linux. Whenever programs start or system events occur, it tries to show the corresponding command-line equivalent alongside quick context and a wiki link — purely as a non-interactive, read-only observer.
